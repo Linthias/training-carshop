@@ -1,0 +1,244 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="39406 (generated)" id="1692976532072-1">
+        <createTable tableName="clients">
+            <column autoIncrement="true" name="client_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_client"/>
+            </column>
+            <column name="first_name" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="middle_name" type="VARCHAR(30)"/>
+            <column name="surname" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="birthdate" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gender" type="VARCHAR(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-2">
+        <insert tableName="clients">
+            <column name="client_id" valueNumeric="1"/>
+            <column name="first_name" value="John"/>
+            <column name="middle_name"/>
+            <column name="surname" value="Doe"/>
+            <column name="birthdate" valueDate="1998-06-29"/>
+            <column name="gender" value="Male"/>
+        </insert>
+        <insert tableName="clients">
+            <column name="client_id" valueNumeric="2"/>
+            <column name="first_name" value="Georgia"/>
+            <column name="middle_name" value="Williams"/>
+            <column name="surname" value="Allen"/>
+            <column name="birthdate" valueDate="1919-05-12"/>
+            <column name="gender" value="Female"/>
+        </insert>
+        <insert tableName="clients">
+            <column name="client_id" valueNumeric="3"/>
+            <column name="first_name" value="Ben"/>
+            <column name="middle_name" value="David"/>
+            <column name="surname" value="Alford"/>
+            <column name="birthdate" valueDate="1964-12-20"/>
+            <column name="gender" value="Male"/>
+        </insert>
+        <insert tableName="clients">
+            <column name="client_id" valueNumeric="4"/>
+            <column name="first_name" value="Audrey"/>
+            <column name="middle_name" value="Marie"/>
+            <column name="surname" value="Anderson"/>
+            <column name="birthdate" valueDate="1975-03-07"/>
+            <column name="gender" value="Female"/>
+        </insert>
+        <insert tableName="clients">
+            <column name="client_id" valueNumeric="5"/>
+            <column name="first_name" value="Geoffrey"/>
+            <column name="middle_name" value="Rashid"/>
+            <column name="surname" value="Arend"/>
+            <column name="birthdate" valueDate="1978-02-28"/>
+            <column name="gender" value="Male"/>
+        </insert>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-3">
+        <createTable tableName="cars">
+            <column autoIncrement="true" name="car_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_car"/>
+            </column>
+            <column name="manufacturer_id" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="car_model" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="color" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="engine_displacement" type="FLOAT4">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manufacture_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="numeric(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-4">
+        <createTable tableName="manufacturers">
+            <column name="manufacturer_id" type="INTEGER">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_manufacturer"/>
+            </column>
+            <column name="manufacturer_name" type="VARCHAR(30)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-5">
+        <createTable tableName="orders">
+            <column autoIncrement="true" name="order_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_order"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="car_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-6">
+        <insert tableName="cars">
+            <column name="car_id" valueNumeric="1"/>
+            <column name="manufacturer_id" valueNumeric="2"/>
+            <column name="car_model" value="F-150"/>
+            <column name="color" value="Black"/>
+            <column name="engine_displacement" valueNumeric="6.3"/>
+            <column name="manufacture_date" valueDate="2005-04-09"/>
+            <column name="price" valueNumeric="18799.99"/>
+        </insert>
+        <insert tableName="cars">
+            <column name="car_id" valueNumeric="2"/>
+            <column name="manufacturer_id" valueNumeric="3"/>
+            <column name="car_model" value="Camry"/>
+            <column name="color" value="White"/>
+            <column name="engine_displacement" valueNumeric="1.8"/>
+            <column name="manufacture_date" valueDate="2005-04-09"/>
+            <column name="price" valueNumeric="15000.00"/>
+        </insert>
+        <insert tableName="cars">
+            <column name="car_id" valueNumeric="3"/>
+            <column name="manufacturer_id" valueNumeric="10"/>
+            <column name="car_model" value="Model Y"/>
+            <column name="color" value="Blue"/>
+            <column name="engine_displacement" valueNumeric="0.0"/>
+            <column name="manufacture_date" valueDate="2005-04-09"/>
+            <column name="price" valueNumeric="25000.00"/>
+        </insert>
+        <insert tableName="cars">
+            <column name="car_id" valueNumeric="4"/>
+            <column name="manufacturer_id" valueNumeric="4"/>
+            <column name="car_model" value="Golf"/>
+            <column name="color" value="Red"/>
+            <column name="engine_displacement" valueNumeric="1.6"/>
+            <column name="manufacture_date" valueDate="2005-04-09"/>
+            <column name="price" valueNumeric="14000.00"/>
+        </insert>
+        <insert tableName="cars">
+            <column name="car_id" valueNumeric="5"/>
+            <column name="manufacturer_id" valueNumeric="8"/>
+            <column name="car_model" value="5 series"/>
+            <column name="color" value="Red"/>
+            <column name="engine_displacement" valueNumeric="2.5"/>
+            <column name="manufacture_date" valueDate="2005-04-09"/>
+            <column name="price" valueNumeric="23000.00"/>
+        </insert>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-7">
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="1"/>
+            <column name="manufacturer_name" value="General Motors"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="2"/>
+            <column name="manufacturer_name" value="Ford Motor Company"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="3"/>
+            <column name="manufacturer_name" value="Toyota Motor Corporation"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="4"/>
+            <column name="manufacturer_name" value="Volkswagen"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="5"/>
+            <column name="manufacturer_name" value="Chrysler Stellantis"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="6"/>
+            <column name="manufacturer_name" value="Mercedes Benz"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="7"/>
+            <column name="manufacturer_name" value="Hyundai"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="8"/>
+            <column name="manufacturer_name" value="BMW"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="9"/>
+            <column name="manufacturer_name" value="Nissan"/>
+        </insert>
+        <insert tableName="manufacturers">
+            <column name="manufacturer_id" valueNumeric="10"/>
+            <column name="manufacturer_name" value="Tesla"/>
+        </insert>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-8">
+        <insert tableName="orders">
+            <column name="order_id" valueNumeric="1"/>
+            <column name="client_id" valueNumeric="3"/>
+            <column name="car_id" valueNumeric="2"/>
+            <column name="order_date" valueDate="2023-06-29"/>
+        </insert>
+        <insert tableName="orders">
+            <column name="order_id" valueNumeric="2"/>
+            <column name="client_id" valueNumeric="3"/>
+            <column name="car_id" valueNumeric="1"/>
+            <column name="order_date" valueDate="2023-04-11"/>
+        </insert>
+        <insert tableName="orders">
+            <column name="order_id" valueNumeric="3"/>
+            <column name="client_id" valueNumeric="5"/>
+            <column name="car_id" valueNumeric="4"/>
+            <column name="order_date" valueDate="2023-07-30"/>
+        </insert>
+        <insert tableName="orders">
+            <column name="order_id" valueNumeric="4"/>
+            <column name="client_id" valueNumeric="2"/>
+            <column name="car_id" valueNumeric="1"/>
+            <column name="order_date" valueDate="2023-06-01"/>
+        </insert>
+        <insert tableName="orders">
+            <column name="order_id" valueNumeric="5"/>
+            <column name="client_id" valueNumeric="4"/>
+            <column name="car_id" valueNumeric="3"/>
+            <column name="order_date" valueDate="2023-01-15"/>
+        </insert>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-9">
+        <addForeignKeyConstraint baseColumnNames="car_id" baseTableName="orders" constraintName="fk_car" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="NO ACTION" referencedColumnNames="car_id" referencedTableName="cars" validate="true"/>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-10">
+        <addForeignKeyConstraint baseColumnNames="client_id" baseTableName="orders" constraintName="fk_client" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="NO ACTION" referencedColumnNames="client_id" referencedTableName="clients" validate="true"/>
+    </changeSet>
+    <changeSet author="39406 (generated)" id="1692976532072-11">
+        <addForeignKeyConstraint baseColumnNames="manufacturer_id" baseTableName="cars" constraintName="fk_manufacturer" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="NO ACTION" referencedColumnNames="manufacturer_id" referencedTableName="manufacturers" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
