@@ -1,9 +1,9 @@
-package com.github.linthias.cars;
+package com.github.linthias.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class CarModel {
+public class Car {
     private Long id;
     private String manufacturer;
     private String model;
@@ -12,8 +12,8 @@ public class CarModel {
     private LocalDate manufactureDate;
     private BigDecimal price;
 
-    public CarModel(Long id, String manufacturer, String model, String color, Double engineDisplacement,
-                    LocalDate manufactureDate, BigDecimal price) {
+    public Car(Long id, String manufacturer, String model, String color, Double engineDisplacement,
+               LocalDate manufactureDate, BigDecimal price) {
         this.id = id;
         this.manufacturer = manufacturer;
         this.model = model;

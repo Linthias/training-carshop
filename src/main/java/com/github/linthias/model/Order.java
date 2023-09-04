@@ -1,14 +1,14 @@
-package com.github.linthias.orders;
+package com.github.linthias.model;
 
 import java.time.LocalDate;
 
-public class OrderModel {
+public class Order {
     private Long id;
     private Long clientId;
     private Long carId;
     private LocalDate orderDate;
 
-    public OrderModel(Long id, Long clientId, Long carId, LocalDate orderDate) {
+    public Order(Long id, Long clientId, Long carId, LocalDate orderDate) {
         this.id = id;
         this.clientId = clientId;
         this.carId = carId;

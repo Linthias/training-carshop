@@ -1,5 +1,7 @@
-package com.github.linthias.orders;
+package com.github.linthias.controllers;
 
+import com.github.linthias.model.Car;
+import com.github.linthias.repositories.CarRepository;
 import com.google.gson.Gson;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,9 +15,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@WebServlet("/orders")
-public class OrderController extends HttpServlet {
-    private OrderRepository orderRepository;
+@WebServlet("/cars")
+public class CarController extends HttpServlet {
+    private CarRepository carRepository;
     private Gson gson;
     private Driver dbDriver;
 
@@ -23,7 +25,7 @@ public class OrderController extends HttpServlet {
     public void init() {
         gson = new Gson();
         dbDriver = new Driver();
-        orderRepository = new OrderRepository(
+        carRepository = new CarRepository(
                 getServletContext().getInitParameter("dbAddress"),
                 getServletContext().getInitParameter("dbUser"),
                 getServletContext().getInitParameter("dbPassword"));
@@ -50,11 +52,11 @@ public class OrderController extends HttpServlet {
             try {
                 String body = request.getReader().lines().collect(Collectors.joining("\n"));
 
-                OrderModel newOrder = gson.fromJson(body, OrderModel.class);
+                Car newCar = gson.fromJson(body, Car.class);
 
                 DriverManager.registerDriver(dbDriver);
 
-                if (orderRepository.create(newOrder)) {
+                if (carRepository.create(newCar)) {
                     response.setStatus(201);
                 } else {
                     response.sendError(500);
@@ -69,8 +71,8 @@ public class OrderController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        OrderModel order;
-        List<OrderModel> orders;
+        Car car;
+        List<Car> cars;
         String output;
 
         try {
@@ -80,21 +82,21 @@ public class OrderController extends HttpServlet {
                 DriverManager.registerDriver(dbDriver);
 
                 if (id == -1) {
-                    orders = orderRepository.readAll();
-                    if (orders == null) {
+                    cars = carRepository.readAll();
+                    if (cars == null) {
                         response.sendError(404);
                         throw new RuntimeException("not found");
                     }
 
-                    output = gson.toJson(orders);
+                    output = gson.toJson(cars);
                 } else {
-                    order = orderRepository.readById(id);
-                    if (order == null) {
+                    car = carRepository.readById(id);
+                    if (car == null) {
                         response.sendError(404);
                         throw new RuntimeException("not found");
                     }
 
-                    output = gson.toJson(order);
+                    output = gson.toJson(car);
                 }
 
                 response.setStatus(200);
@@ -114,11 +116,11 @@ public class OrderController extends HttpServlet {
             try {
                 String body = request.getReader().lines().collect(Collectors.joining("\n"));
 
-                OrderModel newOrder = gson.fromJson(body, OrderModel.class);
+                Car newCar = gson.fromJson(body, Car.class);
 
                 DriverManager.registerDriver(dbDriver);
 
-                if (orderRepository.update(newOrder)) {
+                if (carRepository.update(newCar)) {
                     response.setStatus(200);
                 } else {
                     response.sendError(500);
@@ -142,7 +144,7 @@ public class OrderController extends HttpServlet {
 
                 DriverManager.registerDriver(dbDriver);
 
-                if (orderRepository.deleteById(id)) {
+                if (carRepository.deleteById(id)) {
                     response.setStatus(200);
                 } else {
                     response.sendError(500);

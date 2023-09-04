@@ -1,5 +1,7 @@
-package com.github.linthias.clients;
+package com.github.linthias.controllers;
 
+import com.github.linthias.model.Manufacturer;
+import com.github.linthias.repositories.ManufacturerRepository;
 import com.google.gson.Gson;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,9 +15,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@WebServlet("/clients")
-public class ClientController extends HttpServlet {
-    private ClientRepository clientRepository;
+@WebServlet("/manufacturers")
+public class ManufacturerController extends HttpServlet {
+    private ManufacturerRepository manufacturerRepository;
     private Gson gson;
     private Driver dbDriver;
 
@@ -23,7 +25,7 @@ public class ClientController extends HttpServlet {
     public void init() {
         gson = new Gson();
         dbDriver = new Driver();
-        clientRepository = new ClientRepository(
+        manufacturerRepository = new ManufacturerRepository(
                 getServletContext().getInitParameter("dbAddress"),
                 getServletContext().getInitParameter("dbUser"),
                 getServletContext().getInitParameter("dbPassword"));
@@ -50,11 +52,11 @@ public class ClientController extends HttpServlet {
             try {
                 String body = request.getReader().lines().collect(Collectors.joining("\n"));
 
-                ClientModel newClient = gson.fromJson(body, ClientModel.class);
+                Manufacturer newManufacturer = gson.fromJson(body, Manufacturer.class);
 
                 DriverManager.registerDriver(dbDriver);
 
-                if (clientRepository.create(newClient)) {
+                if (manufacturerRepository.create(newManufacturer)) {
                     response.setStatus(201);
                 } else {
                     response.sendError(500);
@@ -69,8 +71,8 @@ public class ClientController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        ClientModel client;
-        List<ClientModel> clients;
+        Manufacturer manufacturer;
+        List<Manufacturer> manufacturers;
         String output;
 
         try {
@@ -80,21 +82,21 @@ public class ClientController extends HttpServlet {
                 DriverManager.registerDriver(dbDriver);
 
                 if (id == -1) {
-                    clients = clientRepository.readAll();
-                    if (clients == null) {
+                    manufacturers = manufacturerRepository.readAll();
+                    if (manufacturers == null) {
                         response.sendError(404);
                         throw new RuntimeException("not found");
                     }
 
-                    output = gson.toJson(clients);
+                    output = gson.toJson(manufacturers);
                 } else {
-                    client = clientRepository.readById(id);
-                    if (client == null) {
+                    manufacturer = manufacturerRepository.readById(id);
+                    if (manufacturer == null) {
                         response.sendError(404);
                         throw new RuntimeException("not found");
                     }
 
-                    output = gson.toJson(client);
+                    output = gson.toJson(manufacturer);
                 }
 
                 response.setStatus(200);
@@ -114,11 +116,11 @@ public class ClientController extends HttpServlet {
             try {
                 String body = request.getReader().lines().collect(Collectors.joining("\n"));
 
-                ClientModel newClient = gson.fromJson(body, ClientModel.class);
+                Manufacturer newManufacturer = gson.fromJson(body, Manufacturer.class);
 
                 DriverManager.registerDriver(dbDriver);
 
-                if (clientRepository.update(newClient)) {
+                if (manufacturerRepository.update(newManufacturer)) {
                     response.setStatus(200);
                 } else {
                     response.sendError(500);
@@ -142,7 +144,7 @@ public class ClientController extends HttpServlet {
 
                 DriverManager.registerDriver(dbDriver);
 
-                if (clientRepository.deleteById(id)) {
+                if (manufacturerRepository.deleteById(id)) {
                     response.setStatus(200);
                 } else {
                     response.sendError(500);

@@ -1,10 +1,10 @@
-package com.github.linthias.manufacturers;
+package com.github.linthias.model;
 
-public class ManufacturerModel {
+public class Manufacturer {
     private Long id;
     private String name;
 
-    public ManufacturerModel(Long id, String name) {
+    public Manufacturer(Long id, String name) {
         this.id = id;
         this.name = name;
     }

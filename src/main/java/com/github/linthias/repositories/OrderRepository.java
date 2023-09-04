@@ -1,4 +1,6 @@
-package com.github.linthias.clients;
+package com.github.linthias.repositories;
+
+import com.github.linthias.model.Order;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,33 +10,31 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientRepository {
+public class OrderRepository {
     private final String dbUri;
     private final String user;
     private final String password;
 
 
-    public ClientRepository(String dbUri, String user, String password) {
+    public OrderRepository(String dbUri, String user, String password) {
         this.dbUri = dbUri;
         this.user = user;
         this.password = password;
     }
 
-    public boolean create(ClientModel client) {
+    public boolean create(Order order) {
         int affectedRows;
 
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
                         "INSERT INTO "
-                                + "PUBLIC.\"clients\" (client_id, first_name, middle_name, surname, birthdate, gender)"
+                                + "PUBLIC.\"orders\" (order_id, client_id, car_id, order_date)"
                                 + "VALUES "
-                                + "(DEFAULT, '"
-                                + client.getFirstName() + "', '"
-                                + client.getMiddleName() + "', '"
-                                + client.getSurname() + "', '"
-                                + client.getBirthdate().toString() + "', '"
-                                + client.getGender() + "')"
+                                + "(DEFAULT, "
+                                + order.getClientId() + ", "
+                                + order.getCarId() + ", '"
+                                + order.getOrderDate().toString() + "')"
                                 + " ON CONFLICT DO NOTHING";
                 affectedRows = stmt.executeUpdate(sql);
             }
@@ -46,23 +46,22 @@ public class ClientRepository {
         return affectedRows == 1;
     }
 
-    public ClientModel readById(Long id) {
-        ClientModel client;
+    public Order readById(Long id) {
+        Order order;
+
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
-                        "SELECT * FROM PUBLIC.\"clients\" "
-                                + "WHERE client_id = " + id;
+                        "SELECT * FROM PUBLIC.\"orders\" "
+                                + "WHERE order_id = " + id;
 
                 try (ResultSet result = stmt.executeQuery(sql)) {
                     if (result.next()) {
-                        client = new ClientModel(
+                        order = new Order(
+                                result.getLong("order_id"),
                                 result.getLong("client_id"),
-                                result.getString("first_name"),
-                                result.getString("middle_name"),
-                                result.getString("surname"),
-                                result.getDate("birthdate").toLocalDate(),
-                                result.getString("gender"));
+                                result.getLong("car_id"),
+                                result.getDate("order_date").toLocalDate());
                     } else {
                         throw new RuntimeException("object not found");
                     }
@@ -70,52 +69,49 @@ public class ClientRepository {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            client = null;
+            order = null;
         }
 
-        return client;
+        return order;
     }
 
-    public List<ClientModel> readAll() {
-        List<ClientModel> clients = new ArrayList<>();
+    public List<Order> readAll() {
+        List<Order> orders = new ArrayList<>();
+
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
-                        "SELECT * FROM PUBLIC.\"clients\"";
+                        "SELECT * FROM PUBLIC.\"orders\"";
 
                 try (ResultSet result = stmt.executeQuery(sql)) {
                     while (result.next()) {
-                        clients.add(new ClientModel(
+                        orders.add(new Order(
+                                result.getLong("order_id"),
                                 result.getLong("client_id"),
-                                result.getString("first_name"),
-                                result.getString("middle_name"),
-                                result.getString("surname"),
-                                result.getDate("birthdate").toLocalDate(),
-                                result.getString("gender")));
+                                result.getLong("car_id"),
+                                result.getDate("order_date").toLocalDate()));
                     }
                 }
 
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            clients = null;
+            orders = null;
         }
-        return clients;
+        return orders;
     }
 
-    public boolean update(ClientModel client) {
+    public boolean update(Order order) {
         int affectedRows;
 
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
-                        "UPDATE PUBLIC.\"clients\" SET "
-                                + "first_name = '" + client.getFirstName() + "', "
-                                + "middle_name = '" + client.getMiddleName() + "', "
-                                + "surname = '" + client.getSurname() + "', "
-                                + "birthdate = '" + client.getBirthdate().toString() + "', "
-                                + "gender = '" + client.getGender() + "' "
-                                + "WHERE client_id = " + client.getId();
+                        "UPDATE PUBLIC.\"orders\" SET "
+                                + "client_id = " + order.getClientId() + ", "
+                                + "car_id = " + order.getCarId() + ", "
+                                + "order_date = '" + order.getOrderDate().toString() + "' "
+                                + "WHERE order_id = " + order.getId();
                 affectedRows = stmt.executeUpdate(sql);
             }
         } catch (SQLException e) {
@@ -132,8 +128,8 @@ public class ClientRepository {
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
-                        "DELETE FROM PUBLIC.\"clients\" "
-                                + "WHERE client_id = " + id;
+                        "DELETE FROM PUBLIC.\"orders\" "
+                                + "WHERE order_id = " + id;
                 affectedRows = stmt.executeUpdate(sql);
             }
         } catch (SQLException e) {

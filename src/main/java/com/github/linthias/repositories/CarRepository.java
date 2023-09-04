@@ -1,7 +1,7 @@
-package com.github.linthias.cars;
+package com.github.linthias.repositories;
 
-import com.github.linthias.manufacturers.ManufacturerModel;
-import com.github.linthias.manufacturers.ManufacturerRepository;
+import com.github.linthias.model.Car;
+import com.github.linthias.model.Manufacturer;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -26,12 +26,12 @@ public class CarRepository {
         this.manufacturerRepository = new ManufacturerRepository(dbUri, user, password);
     }
 
-    public boolean create(CarModel car) {
+    public boolean create(Car car) {
         int affectedRows;
         long manufacturerId = -1;
 
-        List<ManufacturerModel> manufacturers = manufacturerRepository.readAll();
-        for (ManufacturerModel manufacturer : manufacturers) {
+        List<Manufacturer> manufacturers = manufacturerRepository.readAll();
+        for (Manufacturer manufacturer : manufacturers) {
             if (manufacturer.getName().equals(car.getManufacturer())) {
                 manufacturerId = manufacturer.getId();
                 break;
@@ -63,8 +63,8 @@ public class CarRepository {
         return affectedRows == 1;
     }
 
-    public CarModel readById(Long id) {
-        CarModel car;
+    public Car readById(Long id) {
+        Car car;
 
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
@@ -76,7 +76,7 @@ public class CarRepository {
 
                 try (ResultSet result = stmt.executeQuery(sql)) {
                     if (result.next()) {
-                        car = new CarModel(
+                        car = new Car(
                                 result.getLong("car_id"),
                                 result.getString("manufacturer_name"),
                                 result.getString("car_model"),
@@ -97,8 +97,8 @@ public class CarRepository {
         return car;
     }
 
-    public List<CarModel> readAll() {
-        List<CarModel> cars = new ArrayList<>();
+    public List<Car> readAll() {
+        List<Car> cars = new ArrayList<>();
 
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
@@ -109,7 +109,7 @@ public class CarRepository {
 
                 try (ResultSet result = stmt.executeQuery(sql)) {
                     while (result.next()) {
-                        cars.add(new CarModel(
+                        cars.add(new Car(
                                 result.getLong("car_id"),
                                 result.getString("manufacturer_name"),
                                 result.getString("car_model"),
@@ -128,12 +128,12 @@ public class CarRepository {
         return cars;
     }
 
-    public boolean update(CarModel car) {
+    public boolean update(Car car) {
         int affectedRows;
         long manufacturerId = -1;
 
-        List<ManufacturerModel> manufacturers = manufacturerRepository.readAll();
-        for (ManufacturerModel manufacturer : manufacturers) {
+        List<Manufacturer> manufacturers = manufacturerRepository.readAll();
+        for (Manufacturer manufacturer : manufacturers) {
             if (manufacturer.getName().equals(car.getManufacturer())) {
                 manufacturerId = manufacturer.getId();
                 break;

@@ -1,4 +1,6 @@
-package com.github.linthias.orders;
+package com.github.linthias.repositories;
+
+import com.github.linthias.model.Manufacturer;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,31 +10,29 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrderRepository {
+public class ManufacturerRepository {
     private final String dbUri;
     private final String user;
     private final String password;
 
 
-    public OrderRepository(String dbUri, String user, String password) {
+    public ManufacturerRepository(String dbUri, String user, String password) {
         this.dbUri = dbUri;
         this.user = user;
         this.password = password;
     }
 
-    public boolean create(OrderModel order) {
+    public boolean create(Manufacturer manufacturer) {
         int affectedRows;
 
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
                         "INSERT INTO "
-                                + "PUBLIC.\"orders\" (order_id, client_id, car_id, order_date)"
-                                + "VALUES "
-                                + "(DEFAULT, "
-                                + order.getClientId() + ", "
-                                + order.getCarId() + ", '"
-                                + order.getOrderDate().toString() + "')"
+                                + "PUBLIC.\"manufacturers\" (manufacturer_id, manufacturer_name)"
+                                + "VALUES ("
+                                + manufacturer.getId() + ", '"
+                                + manufacturer.getName() + "')"
                                 + " ON CONFLICT DO NOTHING";
                 affectedRows = stmt.executeUpdate(sql);
             }
@@ -44,22 +44,20 @@ public class OrderRepository {
         return affectedRows == 1;
     }
 
-    public OrderModel readById(Long id) {
-        OrderModel order;
+    public Manufacturer readById(Long id) {
+        Manufacturer manufacturer;
 
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
-                        "SELECT * FROM PUBLIC.\"orders\" "
-                                + "WHERE order_id = " + id;
+                        "SELECT * FROM PUBLIC.\"manufacturers\" "
+                                + "WHERE manufacturer_id = " + id;
 
                 try (ResultSet result = stmt.executeQuery(sql)) {
                     if (result.next()) {
-                        order = new OrderModel(
-                                result.getLong("order_id"),
-                                result.getLong("client_id"),
-                                result.getLong("car_id"),
-                                result.getDate("order_date").toLocalDate());
+                        manufacturer = new Manufacturer(
+                                result.getLong("manufacturer_id"),
+                                result.getString("manufacturer_name"));
                     } else {
                         throw new RuntimeException("object not found");
                     }
@@ -67,49 +65,44 @@ public class OrderRepository {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            order = null;
+            manufacturer = null;
         }
 
-        return order;
+        return manufacturer;
     }
 
-    public List<OrderModel> readAll() {
-        List<OrderModel> orders = new ArrayList<>();
+    public List<Manufacturer> readAll() {
+        List<Manufacturer> manufacturers = new ArrayList<>();
 
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
-                        "SELECT * FROM PUBLIC.\"orders\"";
+                        "SELECT * FROM PUBLIC.\"manufacturers\"";
 
                 try (ResultSet result = stmt.executeQuery(sql)) {
                     while (result.next()) {
-                        orders.add(new OrderModel(
-                                result.getLong("order_id"),
-                                result.getLong("client_id"),
-                                result.getLong("car_id"),
-                                result.getDate("order_date").toLocalDate()));
+                        manufacturers.add(new Manufacturer(
+                                result.getLong("manufacturer_id"),
+                                result.getString("manufacturer_name")));
                     }
                 }
-
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            orders = null;
+            manufacturers = null;
         }
-        return orders;
+        return manufacturers;
     }
 
-    public boolean update(OrderModel order) {
+    public boolean update(Manufacturer manufacturer) {
         int affectedRows;
 
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
-                        "UPDATE PUBLIC.\"orders\" SET "
-                                + "client_id = " + order.getClientId() + ", "
-                                + "car_id = " + order.getCarId() + ", "
-                                + "order_date = '" + order.getOrderDate().toString() + "' "
-                                + "WHERE order_id = " + order.getId();
+                        "UPDATE PUBLIC.\"manufacturers\" SET "
+                                + "manufacturer_name = '" + manufacturer.getName() + "' "
+                                + "WHERE manufacturer_id = " + manufacturer.getId();
                 affectedRows = stmt.executeUpdate(sql);
             }
         } catch (SQLException e) {
@@ -126,8 +119,8 @@ public class OrderRepository {
         try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
             try (Statement stmt = con.createStatement()) {
                 String sql =
-                        "DELETE FROM PUBLIC.\"orders\" "
-                                + "WHERE order_id = " + id;
+                        "DELETE FROM PUBLIC.\"manufacturers\" "
+                                + "WHERE manufacturer_id = " + id;
                 affectedRows = stmt.executeUpdate(sql);
             }
         } catch (SQLException e) {

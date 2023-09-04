@@ -55,7 +55,7 @@
                     <url>jdbc:postgresql://localhost:5432/training</url>
                     <username>test</username>
                     <password>test</password>
-                    <outputChangeLogFile>src/main/resources/initDb.xml</outputChangeLogFile>
+                    <outputChangeLogFile>db/changelog/initDb.xml</outputChangeLogFile>
                     <diffTypes>tables, views, columns, indexes, foreignkeys, primarykeys, uniqueconstraints, data</diffTypes>
                 </configuration>
             </plugin>
