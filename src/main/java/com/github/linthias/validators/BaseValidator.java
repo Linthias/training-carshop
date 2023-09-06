@@ -3,7 +3,7 @@ package com.github.linthias.validators;
 import java.time.LocalDate;
 
 public interface BaseValidator <E> {
-    boolean validate(E entity);
+    boolean isValid(E entity);
 
     default boolean isBlankString(String input) {
         return input == null || input.isBlank();

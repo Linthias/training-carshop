@@ -4,7 +4,7 @@ import com.github.linthias.dto.ClientDto;
 
 public class ClientDtoValidator implements BaseValidator<ClientDto> {
     @Override
-    public boolean validate(ClientDto entity) {
+    public boolean isValid(ClientDto entity) {
         return !isBlankString(entity.getFirstName())
                 && !isBlankString(entity.getSurname())
                 && isValidDate(entity.getBirthdate())

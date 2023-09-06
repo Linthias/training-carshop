@@ -1,133 +1,148 @@
 package com.github.linthias.repositories;
 
+import com.github.linthias.exceptions.BaseException;
+import com.github.linthias.exceptions.EntityNotFoundException;
 import com.github.linthias.model.Manufacturer;
+import com.github.linthias.util.DbConnector;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManufacturerRepository {
-    private final String dbUri;
-    private final String user;
-    private final String password;
+import static com.github.linthias.sqlStatements.ManufacturerPrepStatement.DELETE_BY_ID;
+import static com.github.linthias.sqlStatements.ManufacturerPrepStatement.GET_BY_NAME;
+import static com.github.linthias.sqlStatements.ManufacturerPrepStatement.UPDATE_BY_ID;
+import static com.github.linthias.sqlStatements.ManufacturerPrepStatement.GET_ALL;
+import static com.github.linthias.sqlStatements.ManufacturerPrepStatement.GET_BY_ID;
+import static com.github.linthias.sqlStatements.ManufacturerPrepStatement.INSERT;
 
-
-    public ManufacturerRepository(String dbUri, String user, String password) {
-        this.dbUri = dbUri;
-        this.user = user;
-        this.password = password;
+public class ManufacturerRepository extends BaseRepository<Manufacturer> {
+    private static ManufacturerRepository repository;
+    protected ManufacturerRepository(DbConnector connector) {
+        super(connector);
     }
 
-    public boolean create(Manufacturer manufacturer) {
-        int affectedRows;
-
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "INSERT INTO "
-                                + "PUBLIC.\"manufacturers\" (manufacturer_id, manufacturer_name)"
-                                + "VALUES ("
-                                + manufacturer.getId() + ", '"
-                                + manufacturer.getName() + "')"
-                                + " ON CONFLICT DO NOTHING";
-                affectedRows = stmt.executeUpdate(sql);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            affectedRows = 0;
+    public static ManufacturerRepository getInstance(DbConnector connector) {
+        if (repository == null) {
+            repository = new ManufacturerRepository(connector);
         }
-
-        return affectedRows == 1;
+        return repository;
     }
 
-    public Manufacturer readById(Long id) {
-        Manufacturer manufacturer;
+    @Override
+    public Manufacturer create(Manufacturer manufacturer) throws SQLException, BaseException {
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "SELECT * FROM PUBLIC.\"manufacturers\" "
-                                + "WHERE manufacturer_id = " + id;
+            stmt.setLong(1, manufacturer.getId());
+            stmt.setString(2, manufacturer.getName());
 
-                try (ResultSet result = stmt.executeQuery(sql)) {
-                    if (result.next()) {
-                        manufacturer = new Manufacturer(
-                                result.getLong("manufacturer_id"),
-                                result.getString("manufacturer_name"));
-                    } else {
-                        throw new RuntimeException("object not found");
-                    }
+            stmt.executeUpdate();
+
+            try (ResultSet generatedIds = stmt.getGeneratedKeys()) {
+                if (generatedIds.next()) {
+                    manufacturer.setId(generatedIds.getLong("manufacturer_id"));
+                } else {
+                    throw new EntityNotFoundException("id for" + Manufacturer.class + " was not found");
                 }
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            manufacturer = null;
         }
 
         return manufacturer;
     }
 
-    public List<Manufacturer> readAll() {
-        List<Manufacturer> manufacturers = new ArrayList<>();
+    @Override
+    public Manufacturer findById(Long id) throws SQLException, BaseException {
+        Manufacturer manufacturer;
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "SELECT * FROM PUBLIC.\"manufacturers\"";
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(GET_BY_ID)) {
 
-                try (ResultSet result = stmt.executeQuery(sql)) {
-                    while (result.next()) {
-                        manufacturers.add(new Manufacturer(
-                                result.getLong("manufacturer_id"),
-                                result.getString("manufacturer_name")));
-                    }
+            stmt.setLong(1, id);
+
+            try (ResultSet result = stmt.executeQuery()) {
+                if (result.next()) {
+                    manufacturer = new Manufacturer(
+                            result.getLong("manufacturer_id"),
+                            result.getString("manufacturer_name"));
+                } else {
+                    throw new EntityNotFoundException(Manufacturer.class + " not found");
                 }
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            manufacturers = null;
         }
+
+        return manufacturer;
+    }
+
+    public Manufacturer findByName(String name) throws SQLException, BaseException {
+        Manufacturer manufacturer;
+
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(GET_BY_NAME)) {
+
+            stmt.setString(1, name);
+
+            try (ResultSet result = stmt.executeQuery()) {
+                if (result.next()) {
+                    manufacturer = new Manufacturer(
+                            result.getLong("manufacturer_id"),
+                            result.getString("manufacturer_name"));
+                } else {
+                    throw new EntityNotFoundException(Manufacturer.class + " not found");
+                }
+            }
+        }
+
+        return manufacturer;
+    }
+
+    @Override
+    public List<Manufacturer> findAll() throws SQLException {
+        List<Manufacturer> manufacturers = new ArrayList<>();
+
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(GET_ALL);
+             ResultSet result = stmt.executeQuery()) {
+
+            while (result.next()) {
+                manufacturers.add(new Manufacturer(
+                        result.getLong("manufacturer_id"),
+                        result.getString("manufacturer_name")));
+            }
+
+        }
+
         return manufacturers;
     }
 
-    public boolean update(Manufacturer manufacturer) {
-        int affectedRows;
+    @Override
+    public Manufacturer update(Manufacturer manufacturer) throws SQLException {
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(UPDATE_BY_ID)) {
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "UPDATE PUBLIC.\"manufacturers\" SET "
-                                + "manufacturer_name = '" + manufacturer.getName() + "' "
-                                + "WHERE manufacturer_id = " + manufacturer.getId();
-                affectedRows = stmt.executeUpdate(sql);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            affectedRows = 0;
+            stmt.setString(1, manufacturer.getName());
+            stmt.setLong(2, manufacturer.getId());
+
+            stmt.executeUpdate();
         }
 
-        return affectedRows == 1;
+        return null;
     }
 
-    public boolean deleteById(Long id) {
-        int affectedRows;
+    @Override
+    public void deleteById(Long id) throws SQLException, BaseException {
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(DELETE_BY_ID)) {
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "DELETE FROM PUBLIC.\"manufacturers\" "
-                                + "WHERE manufacturer_id = " + id;
-                affectedRows = stmt.executeUpdate(sql);
+            stmt.setLong(1, id);
+
+            if (stmt.executeUpdate() != 1) {
+                throw new EntityNotFoundException(Manufacturer.class + " was not deleted");
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            affectedRows = 0;
         }
-
-        return affectedRows == 1;
     }
 }

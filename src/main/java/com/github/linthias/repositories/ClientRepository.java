@@ -1,10 +1,11 @@
 package com.github.linthias.repositories;
 
+import com.github.linthias.exceptions.BaseException;
+import com.github.linthias.exceptions.EntityNotFoundException;
 import com.github.linthias.model.Client;
 import com.github.linthias.util.DbConnector;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,21 +13,29 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.linthias.sqlStatements.ClientPrepStatement.COUNT_BY_ID;
 import static com.github.linthias.sqlStatements.ClientPrepStatement.DELETE_BY_ID;
 import static com.github.linthias.sqlStatements.ClientPrepStatement.GET_ALL;
 import static com.github.linthias.sqlStatements.ClientPrepStatement.GET_BY_ID;
 import static com.github.linthias.sqlStatements.ClientPrepStatement.INSERT;
 import static com.github.linthias.sqlStatements.ClientPrepStatement.UPDATE_BY_ID;
 
-public class ClientRepository {
-    private final DbConnector connector;
+public class ClientRepository extends BaseRepository<Client> {
+    private static ClientRepository repository;
 
-    public ClientRepository(DbConnector connector) {
-        this.connector = connector;
+    protected ClientRepository(DbConnector connector) {
+        super(connector);
     }
 
-    public Client create(Client client) throws SQLException {
+    public static ClientRepository getInstance(DbConnector connector) {
+        if (repository == null) {
+            repository = new ClientRepository(connector);
+        }
+
+        return repository;
+    }
+
+    @Override
+    public Client create(Client client) throws SQLException, BaseException {
         try (Connection con = connector.getConnection();
              PreparedStatement stmt = con.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -42,7 +51,7 @@ public class ClientRepository {
                 if (generatedIds.next()) {
                     client.setId(generatedIds.getLong("client_id"));
                 } else {
-                    throw new RuntimeException("id not found");
+                    throw new EntityNotFoundException("id for" + Client.class + " was not found");
                 }
             }
         }
@@ -50,8 +59,9 @@ public class ClientRepository {
         return client;
     }
 
-    public Client findById(Long id) throws SQLException {
-        Client client = null;
+    @Override
+    public Client findById(Long id) throws SQLException, BaseException {
+        Client client;
 
         try (Connection con = connector.getConnection();
              PreparedStatement stmt = con.prepareStatement(GET_BY_ID)) {
@@ -68,7 +78,7 @@ public class ClientRepository {
                             result.getDate("birthdate").toLocalDate(),
                             result.getString("gender"));
                 } else {
-                    throw new RuntimeException("object not found");
+                    throw new EntityNotFoundException(Client.class + " not found");
                 }
             }
         }
@@ -76,6 +86,7 @@ public class ClientRepository {
         return client;
     }
 
+    @Override
     public List<Client> findAll() throws SQLException {
         List<Client> clients = new ArrayList<>();
 
@@ -98,8 +109,8 @@ public class ClientRepository {
         return clients;
     }
 
+    @Override
     public Client update(Client client) throws SQLException {
-
         try (Connection con = connector.getConnection();
              PreparedStatement stmt = con.prepareStatement(UPDATE_BY_ID)) {
 
@@ -116,37 +127,16 @@ public class ClientRepository {
         return client;
     }
 
-    public boolean deleteById(Long id) throws SQLException {
-        int affectedRows;
-
+    @Override
+    public void deleteById(Long id) throws SQLException, BaseException {
         try (Connection con = connector.getConnection();
              PreparedStatement stmt = con.prepareStatement(DELETE_BY_ID)) {
 
             stmt.setLong(1, id);
 
-            affectedRows = stmt.executeUpdate();
-        }
-
-        return affectedRows == 1;
-    }
-
-    public boolean exists(Long id) throws SQLException {
-        long count;
-
-        try (Connection con = connector.getConnection();
-             PreparedStatement stmt = con.prepareStatement(COUNT_BY_ID)) {
-
-            stmt.setLong(1, id);
-
-            try (ResultSet result = stmt.executeQuery()) {
-                if (result.next()) {
-                    count = result.getLong("count");
-                } else {
-                    throw new RuntimeException("object not found");
-                }
+            if (stmt.executeUpdate() != 1) {
+                throw new EntityNotFoundException(Client.class + " was not deleted");
             }
         }
-
-        return count == 1;
     }
 }

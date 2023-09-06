@@ -3,7 +3,7 @@ package com.github.linthias.dtoMappers;
 import com.github.linthias.dto.ClientDto;
 import com.github.linthias.model.Client;
 
-public class ClientMapper implements BaseMapper <Client, ClientDto>{
+public class ClientMapper implements BaseMapper <Client, ClientDto, ClientDto>{
     @Override
     public ClientDto toDto(Client entity) {
         return new ClientDto(

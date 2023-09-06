@@ -12,8 +12,6 @@ public class ClientPrepStatement {
 
     public final static String GET_BY_ID = GET_ALL + " WHERE client_id = ?";
 
-    public final static String COUNT_BY_ID = "SELECT COUNT(client_id) AS count FROM clients WHERE client_id = ?";
-
     public final static String UPDATE_BY_ID = "UPDATE clients SET "
             + "first_name = ?, "
             + "middle_name = ?, "

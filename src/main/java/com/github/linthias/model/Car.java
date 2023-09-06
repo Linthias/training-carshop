@@ -5,17 +5,17 @@ import java.time.LocalDate;
 
 public class Car {
     private Long id;
-    private String manufacturer;
+    private Long manufacturerId;
     private String model;
     private String color;
     private Double engineDisplacement;
     private LocalDate manufactureDate;
     private BigDecimal price;
 
-    public Car(Long id, String manufacturer, String model, String color, Double engineDisplacement,
+    public Car(Long id, Long manufacturerId, String model, String color, Double engineDisplacement,
                LocalDate manufactureDate, BigDecimal price) {
         this.id = id;
-        this.manufacturer = manufacturer;
+        this.manufacturerId = manufacturerId;
         this.model = model;
         this.color = color;
         this.engineDisplacement = engineDisplacement;
@@ -31,12 +31,12 @@ public class Car {
         this.id = id;
     }
 
-    public String getManufacturer() {
-        return manufacturer;
+    public Long getManufacturerId() {
+        return manufacturerId;
     }
 
-    public void setManufacturer(String manufacturer) {
-        this.manufacturer = manufacturer;
+    public void setManufacturer(Long manufacturerId) {
+        this.manufacturerId = manufacturerId;
     }
 
     public String getModel() {

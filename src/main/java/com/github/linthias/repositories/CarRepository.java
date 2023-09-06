@@ -1,181 +1,144 @@
 package com.github.linthias.repositories;
 
+import com.github.linthias.exceptions.BaseException;
+import com.github.linthias.exceptions.EntityNotFoundException;
 import com.github.linthias.model.Car;
-import com.github.linthias.model.Manufacturer;
+import com.github.linthias.util.DbConnector;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CarRepository {
-    private final String dbUri;
-    private final String user;
-    private final String password;
-    private final ManufacturerRepository manufacturerRepository;
+import static com.github.linthias.sqlStatements.CarPrepStatement.INSERT;
+import static com.github.linthias.sqlStatements.CarPrepStatement.GET_BY_ID;
+import static com.github.linthias.sqlStatements.CarPrepStatement.GET_ALL;
+import static com.github.linthias.sqlStatements.CarPrepStatement.UPDATE_BY_ID;
+import static com.github.linthias.sqlStatements.CarPrepStatement.DELETE_BY_ID;
 
-
-    public CarRepository(String dbUri, String user, String password) {
-        this.dbUri = dbUri;
-        this.user = user;
-        this.password = password;
-        this.manufacturerRepository = new ManufacturerRepository(dbUri, user, password);
+public class CarRepository extends BaseRepository<Car> {
+    private static CarRepository repository;
+    protected CarRepository(DbConnector connector) {
+        super(connector);
     }
 
-    public boolean create(Car car) {
-        int affectedRows;
-        long manufacturerId = -1;
-
-        List<Manufacturer> manufacturers = manufacturerRepository.readAll();
-        for (Manufacturer manufacturer : manufacturers) {
-            if (manufacturer.getName().equals(car.getManufacturer())) {
-                manufacturerId = manufacturer.getId();
-                break;
-            }
+    public static CarRepository getInstance(DbConnector connector) {
+        if (repository == null) {
+            repository = new CarRepository(connector);
         }
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "INSERT INTO "
-                                + "PUBLIC.\"cars\" (car_id, manufacturer_id, car_model, color, "
-                                + "engine_displacement, manufacture_date, price)"
-                                + "VALUES "
-                                + "(DEFAULT, "
-                                + manufacturerId + ", '"
-                                + car.getModel() + "', '"
-                                + car.getColor() + "', "
-                                + car.getEngineDisplacement() + ", '"
-                                + car.getManufactureDate().toString() + "', "
-                                + car.getPrice().doubleValue() + ")"
-                                + " ON CONFLICT DO NOTHING";
-                affectedRows = stmt.executeUpdate(sql);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            affectedRows = 0;
-        }
-
-        return affectedRows == 1;
+        return repository;
     }
 
-    public Car readById(Long id) {
-        Car car;
+    @Override
+    public Car create(Car car) throws SQLException, BaseException {
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "SELECT * FROM PUBLIC.\"cars\" "
-                                + "JOIN PUBLIC.\"manufacturers\" "
-                                + "ON PUBLIC.\"cars\".manufacturer_id = PUBLIC.\"manufacturers\".manufacturer_id "
-                                + "WHERE car_id = " + id;
+            stmt.setLong(1, car.getManufacturerId());
+            stmt.setString(2, car.getModel());
+            stmt.setString(3, car.getColor());
+            stmt.setDouble(4, car.getEngineDisplacement());
+            stmt.setString(5, car.getManufactureDate().toString());
+            stmt.setDouble(6, car.getPrice().doubleValue());
 
-                try (ResultSet result = stmt.executeQuery(sql)) {
-                    if (result.next()) {
-                        car = new Car(
-                                result.getLong("car_id"),
-                                result.getString("manufacturer_name"),
-                                result.getString("car_model"),
-                                result.getString("color"),
-                                result.getDouble("engine_displacement"),
-                                result.getDate("manufacture_date").toLocalDate(),
-                                BigDecimal.valueOf(result.getDouble("price")));
-                    } else {
-                        throw new RuntimeException("object not found");
-                    }
+            stmt.executeUpdate();
+
+            try (ResultSet generatedIds = stmt.getGeneratedKeys()) {
+                if (generatedIds.next()) {
+                    car.setId(generatedIds.getLong("car_id"));
+                } else {
+                    throw new EntityNotFoundException("id for" + Car.class + " was not found");
                 }
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            car = null;
         }
 
         return car;
     }
 
-    public List<Car> readAll() {
+    @Override
+    public Car findById(Long id) throws SQLException, BaseException {
+        Car car;
+
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(GET_BY_ID)) {
+
+            stmt.setLong(1, id);
+
+            try (ResultSet result = stmt.executeQuery()) {
+                if (result.next()) {
+                    car = new Car(
+                            result.getLong("car_id"),
+                            result.getLong("manufacturer_id"),
+                            result.getString("car_model"),
+                            result.getString("color"),
+                            result.getDouble("engine_displacement"),
+                            result.getDate("manufacture_date").toLocalDate(),
+                            result.getBigDecimal("price"));
+                } else {
+                    throw new EntityNotFoundException(Car.class + " not found");
+                }
+            }
+        }
+
+        return car;
+    }
+
+    @Override
+    public List<Car> findAll() throws SQLException {
         List<Car> cars = new ArrayList<>();
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "SELECT * FROM PUBLIC.\"cars\" "
-                                + "JOIN PUBLIC.\"manufacturers\" "
-                                + "ON PUBLIC.\"cars\".manufacturer_id = PUBLIC.\"manufacturers\".manufacturer_id";
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(GET_ALL);
+             ResultSet result = stmt.executeQuery()) {
 
-                try (ResultSet result = stmt.executeQuery(sql)) {
-                    while (result.next()) {
-                        cars.add(new Car(
-                                result.getLong("car_id"),
-                                result.getString("manufacturer_name"),
-                                result.getString("car_model"),
-                                result.getString("color"),
-                                result.getDouble("engine_displacement"),
-                                result.getDate("manufacture_date").toLocalDate(),
-                                BigDecimal.valueOf(result.getDouble("price"))));
-                    }
-                }
-
+            while (result.next()) {
+                cars.add(new Car(
+                        result.getLong("car_id"),
+                        result.getLong("manufacturer_id"),
+                        result.getString("car_model"),
+                        result.getString("color"),
+                        result.getDouble("engine_displacement"),
+                        result.getDate("manufacture_date").toLocalDate(),
+                        result.getBigDecimal("price")));
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            cars = null;
         }
+
         return cars;
     }
 
-    public boolean update(Car car) {
-        int affectedRows;
-        long manufacturerId = -1;
+    @Override
+    public Car update(Car car) throws SQLException {
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(UPDATE_BY_ID)) {
 
-        List<Manufacturer> manufacturers = manufacturerRepository.readAll();
-        for (Manufacturer manufacturer : manufacturers) {
-            if (manufacturer.getName().equals(car.getManufacturer())) {
-                manufacturerId = manufacturer.getId();
-                break;
-            }
+            stmt.setLong(1, car.getManufacturerId());
+            stmt.setString(2, car.getModel());
+            stmt.setString(3, car.getColor());
+            stmt.setDouble(4, car.getEngineDisplacement());
+            stmt.setString(5, car.getManufactureDate().toString());
+            stmt.setDouble(6, car.getPrice().doubleValue());
+            stmt.setLong(7, car.getId());
+
+            stmt.executeUpdate();
         }
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "UPDATE PUBLIC.\"cars\" SET "
-                                + "manufacturer_id = " + manufacturerId + ", "
-                                + "car_model = '" + car.getModel() + "', "
-                                + "color = '" + car.getColor() + "', "
-                                + "engine_displacement = " + car.getEngineDisplacement() + ", "
-                                + "manufacture_date = '" + car.getManufactureDate().toString() + "', "
-                                + "price = " + car.getPrice().doubleValue() + " "
-                                + "WHERE car_id = " + car.getId();
-                affectedRows = stmt.executeUpdate(sql);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            affectedRows = 0;
-        }
-
-        return affectedRows == 1;
+        return car;
     }
 
-    public boolean deleteById(Long id) {
-        int affectedRows;
+    @Override
+    public void deleteById(Long id) throws SQLException, BaseException {
+        try (Connection con = connector.getConnection();
+             PreparedStatement stmt = con.prepareStatement(DELETE_BY_ID)) {
 
-        try (Connection con = DriverManager.getConnection(dbUri, user, password)) {
-            try (Statement stmt = con.createStatement()) {
-                String sql =
-                        "DELETE FROM PUBLIC.\"cars\" "
-                                + "WHERE car_id = " + id;
-                affectedRows = stmt.executeUpdate(sql);
+            stmt.setLong(1, id);
+
+            if (stmt.executeUpdate() != 1) {
+                throw new EntityNotFoundException(Car.class + " was not deleted");
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            affectedRows = 0;
         }
-
-        return affectedRows == 1;
     }
 }
